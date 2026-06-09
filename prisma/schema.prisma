@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  industries     IndustryOnProduct[]
+  goals          GoalOnProduct[]
+  categories     CategoryOnProduct[]
+  collections    CollectionOnProduct[]
+  configurations Configuration[]
+}
+
+// ── Taxonomy models ──────────────────────────────────────────────────────────
+
+model Industry {
+  id       String              @id @default(cuid())
+  name     String              @unique
+  slug     String              @unique
+  products IndustryOnProduct[]
+}
+
+model Goal {
+  id       String          @id @default(cuid())
+  name     String          @unique
+  slug     String          @unique
+  products GoalOnProduct[]
+}
+
+model Category {
+  id       String              @id @default(cuid())
+  name     String              @unique
+  slug     String              @unique
+  products CategoryOnProduct[]
+}
+
+model Collection {
+  id          String                @id @default(cuid())
+  name        String                @unique
+  slug        String                @unique
+  description String?
+  products    CollectionOnProduct[]
+}
+
+// ── Join tables ───────────────────────────────────────────────────────────────
+
+model IndustryOnProduct {
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  industry   Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  industryId String
+
+  @@id([productId, industryId])
+}
+
+model GoalOnProduct {
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  goal      Goal    @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId    String
+
+  @@id([productId, goalId])
+}
+
+model CategoryOnProduct {
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+
+  @@id([productId, categoryId])
+}
+
+model CollectionOnProduct {
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId String
+
+  @@id([productId, collectionId])
+}
+
+// ── Configurations ────────────────────────────────────────────────────────────
+// A configuration is a named option set on a product (e.g. "Storage: 128GB, 256GB")
+
+model Configuration {
+  id        String              @id @default(cuid())
+  name      String              // e.g. "Storage", "Colour", "Power"
+  product   Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  options   ConfigurationOption[]
+
+  @@unique([productId, name])
+}
+
+model ConfigurationOption {
+  id              String        @id @default(cuid())
+  value           String        // e.g. "128GB"
+  priceModifier   Float?        // optional price delta vs base
+  configuration   Configuration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
+  configurationId String
+}

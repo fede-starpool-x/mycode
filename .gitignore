@@ -1,0 +1,17 @@
+.next/
+node_modules/
+.env
+*.log
+.DS_Store
+
+# Database
+prisma/*.db
+prisma/*.db-journal
+
+# Uploaded files
+public/uploads/*
+
+# Tooling/IDE
+.claude/
+.vscode/
+.idea/
